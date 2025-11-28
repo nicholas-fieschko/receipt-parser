@@ -11,5 +11,8 @@
   "dependencies": {
     "jsdom": "^27.2.0",
     "vitest": "^3.2.4"
+  },
+  "devDependencies": {
+    "prettier": "3.7.1"
   }
 }

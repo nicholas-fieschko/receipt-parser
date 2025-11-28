@@ -1,1 +1,1 @@
-export { parseCostcoReceipt } from './parseCostcoReceipt';
+export { parseCostcoReceipt } from "./parseCostcoReceipt";
