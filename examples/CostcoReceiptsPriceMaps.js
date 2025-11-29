@@ -1,10 +1,12 @@
 export const CostcoReceiptsPriceMaps = {
   WithDiscount: {
+    date: "10/02/2025",
     91385: { name: "FLAP MEAT", price: 36.24 },
     3095: { name: "PAM SPRY 2PK", price: 7.49, discount: 2 },
     total: { subTotal: 41.73, tax: 0, total: 41.73 },
   },
   WithTaxes: {
+    date: "11/24/2025",
     3: { name: "WHOLE MILK", price: 2.57 },
     87745: { name: "ROTISSERIE", price: 4.99, taxed: true },
     4164501: { name: "KS SPARKLING", price: 11.99, taxed: true },

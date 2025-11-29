@@ -23,10 +23,10 @@ export function parseCostcoReceipt(receipt, debug = false) {
   var reachedEndOfItems = false;
   for (var rowText of rowsText) {
     log("parsing:", rowText);
-    var [_, id, name, priceCode] = rowText;
+    var [firstColumn, id, name, priceCode] = rowText;
 
     if (priceMap[id]) {
-      throw new Error("duplicate item", id);
+      throw new Error("duplicate item " + id);
     }
 
     if (id === "SUBTOTAL") {
@@ -86,6 +86,10 @@ export function parseCostcoReceipt(receipt, debug = false) {
       if (name?.toLowerCase() === "total") {
         priceMap.total.total = toNumber(priceCode, log);
       }
+
+      if (rowText.length === 1 && Date.parse(firstColumn)) {
+        priceMap.date = firstColumn;
+      }
     }
   }
 
@@ -96,4 +100,20 @@ function toNumber(price, log) {
   var numericalPrice = parseFloat(price);
   log("converting price to number:", price, numericalPrice);
   return numericalPrice;
+}
+
+export function receiptToCsv(receiptPriceMap, debug = false) {
+  var { total, date, ...items } = receiptPriceMap;
+  return Object.values(items)
+    .reduce((csvLines, item) => {
+      var { name } = item;
+      var itemAsCsv = `${date},${name},${calculatePrice(item)}`;
+      return [...csvLines, itemAsCsv];
+    }, [])
+    .join("\n");
+}
+
+function calculatePrice(item) {
+  var { price, discount = 0, taxed = false } = item;
+  return price - discount * (taxed ? 1.075 : 1);
 }
