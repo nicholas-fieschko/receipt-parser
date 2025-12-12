@@ -93,7 +93,13 @@ export function parseCostcoReceipt(receipt, debug = false) {
 
       if (rowText.length === 1 && Date.parse(firstColumn)) {
         priceMap.date = firstColumn;
-        log("setting date and time to " + priceMap.date + " " + priceMap.time);
+        log("setting date to " + priceMap.date);
+      }
+
+      if (firstColumn === "APPROVED - REFUND") {
+        items.forEach((item) => {
+          item.refund = true;
+        });
       }
     }
   }
@@ -120,13 +126,14 @@ export function receiptToCsv(receiptPriceMap, debug = false) {
 }
 
 function calculatePrice(item, log) {
-  var { name, price, discount = 0, taxed = false } = item;
+  var { name, price, discount = 0, taxed = false, refund = false } = item;
   const taxModifier = taxed ? 1.075 : 1;
   const taxModifierDisplay = taxed ? ` * ${taxModifier}` : "";
+  const refundModifier = refund ? -1 : 1;
   log(
-    `calculating price for item ${name}: (${price} - ${discount})${taxModifierDisplay}`,
+    `calculating price for item ${name}${refund ? " (refund)" : ""}: (${price} - ${discount})${taxModifierDisplay}`,
   );
-  return toTwoDecimals((price - discount) * taxModifier);
+  return toTwoDecimals((price - discount) * taxModifier * refundModifier);
 }
 
 const toTwoDecimals = (num) => Number(Math.round(num + "e2") + "e-2");
@@ -157,12 +164,22 @@ function waitForElm(selector) {
  * From the Orders and Purchases page, navigates to the Warehouse purchases tab and iterates through available receipts,
  * and outputs a formatted CSV for each to the console.
  * Does not yet support:
- *  - Refunds
  *  - Gas station purchases
  * @returns {Promise<void>}
  */
 async function scrapeReceipts() {
-  if (typeof window !== "undefined" && window?.document) {
+  const isDebugging = window.debug ?? false;
+
+  // If already viewing receipt, just scrape what is on screen
+  if (document.querySelector("#printReceipt")) {
+    console.log(
+      receiptToCsv(
+        parseCostcoReceipt(window.document, isDebugging),
+        isDebugging,
+      ),
+    );
+  } else {
+    // Scraping from main page
     const warehouseButton = document
       .evaluate('//div[text()="Warehouse"]', document)
       ?.iterateNext();
@@ -176,7 +193,6 @@ async function scrapeReceipts() {
         "button[aria-describedby^='viewRecieptBtn']",
       ),
     ];
-    const isDebugging = window.debug ?? false;
     for (let i = 0; i < viewReceiptButtons.length; i++) {
       // document mutation means we need to refetch this list each time, but remember what we've already visited
       viewReceiptButtons = [
@@ -189,6 +205,7 @@ async function scrapeReceipts() {
 
       // wait for receipt to load
       await waitForElm("#printReceipt");
+
       console.log(
         receiptToCsv(
           parseCostcoReceipt(window.document, isDebugging),
@@ -208,4 +225,6 @@ async function scrapeReceipts() {
   }
 }
 
-scrapeReceipts().then(() => console.log("done"));
+if (typeof window !== "undefined" && window?.document) {
+  scrapeReceipts().then(() => console.log("done"));
+}
