@@ -24,3 +24,9 @@ it("sets the time and id properties", () => {
 
   expect(parseResults).toEqual(CostcoReceiptsPriceMaps.WithId);
 });
+
+it("can parse a gas station receipt", () => {
+  const parseResults = parseCostcoReceipt(ExampleCostcoReceipts.Gas);
+
+  expect(parseResults).toEqual(CostcoReceiptsPriceMaps.Gas);
+});

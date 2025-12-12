@@ -7,6 +7,9 @@ export function parseCostcoReceipt(receipt, debug = false) {
     total: {},
   };
   var receiptTable = receipt.querySelector(".printReceipt");
+  var isGasReceipt = receipt.querySelector(
+    'div[data-bi-tc="ui:Gas Station | Receipt Close"]',
+  );
 
   var items = receiptTable.querySelectorAll("tr");
   var rowsText = [...items]
