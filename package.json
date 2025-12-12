@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "test": "vitest"
+    "test": "vitest",
+    "bookmarklet": "node make-bookmarklet.js parseCostcoReceipt.js | pbcopy"
   },
   "author": "nick",
   "license": "ISC",
@@ -13,6 +14,7 @@
     "vitest": "^3.2.4"
   },
   "devDependencies": {
+    "bookmarklet": "^3.0.0",
     "prettier": "3.7.1"
   }
 }
