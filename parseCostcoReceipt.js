@@ -131,5 +131,81 @@ function calculatePrice(item, log) {
 
 const toTwoDecimals = (num) => Number(Math.round(num + "e2") + "e-2");
 
-if (typeof window !== "undefined" && window?.document)
-  console.log(receiptToCsv(parseCostcoReceipt(window.document, true), true));
+// https://stackoverflow.com/a/61511955
+function waitForElm(selector) {
+  return new Promise((resolve) => {
+    if (document.querySelector(selector)) {
+      return resolve(document.querySelector(selector));
+    }
+
+    const observer = new MutationObserver((mutations) => {
+      if (document.querySelector(selector)) {
+        observer.disconnect();
+        resolve(document.querySelector(selector));
+      }
+    });
+
+    // If you get "parameter 1 is not of type 'Node'" error, see https://stackoverflow.com/a/77855838/492336
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true,
+    });
+  });
+}
+
+/**
+ * From the Orders and Purchases page, navigates to the Warehouse purchases tab and iterates through available receipts,
+ * and outputs a formatted CSV for each to the console.
+ * Does not yet support:
+ *  - Refunds
+ *  - Gas station purchases
+ * @returns {Promise<void>}
+ */
+async function scrapeReceipts() {
+  if (typeof window !== "undefined" && window?.document) {
+    const warehouseButton = document
+      .evaluate('//div[text()="Warehouse"]', document)
+      ?.iterateNext();
+    if (warehouseButton) warehouseButton.click();
+
+    // wait for view receipt buttons loaded
+    await waitForElm("button[aria-describedby^='viewRecieptBtn']");
+
+    let viewReceiptButtons = [
+      ...document.querySelectorAll(
+        "button[aria-describedby^='viewRecieptBtn']",
+      ),
+    ];
+    const isDebugging = window.debug ?? false;
+    for (let i = 0; i < viewReceiptButtons.length; i++) {
+      // document mutation means we need to refetch this list each time, but remember what we've already visited
+      viewReceiptButtons = [
+        ...document.querySelectorAll(
+          "button[aria-describedby^='viewRecieptBtn']",
+        ),
+      ];
+
+      viewReceiptButtons[i].click();
+
+      // wait for receipt to load
+      await waitForElm("#printReceipt");
+      console.log(
+        receiptToCsv(
+          parseCostcoReceipt(window.document, isDebugging),
+          isDebugging,
+        ),
+      );
+
+      // close receipt
+      const closeButton = document.querySelector(
+        'button[aria-label="Close"][tabindex="0"]',
+      );
+      closeButton.click();
+
+      // wait for overlay to disappear?
+      await new Promise((r) => setTimeout(r, 500));
+    }
+  }
+}
+
+scrapeReceipts().then(() => console.log("done"));
