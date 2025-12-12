@@ -1,6 +1,11 @@
 export function parseCostcoReceipt(receipt, debug = false) {
   var log = debug ? console.log : () => {};
 
+  var priceMap = {
+    id: receipt.querySelector(".barcode div:last-of-type")?.innerHTML,
+    time: receipt.querySelector(".time")?.innerHTML,
+    total: {},
+  };
   var receiptTable = receipt.querySelector(".printReceipt");
 
   var items = receiptTable.querySelectorAll("tr");
@@ -18,7 +23,6 @@ export function parseCostcoReceipt(receipt, debug = false) {
       }),
     );
 
-  var priceMap = { total: {} };
   var items = [];
   var reachedEndOfItems = false;
   for (var rowText of rowsText) {
@@ -89,6 +93,7 @@ export function parseCostcoReceipt(receipt, debug = false) {
 
       if (rowText.length === 1 && Date.parse(firstColumn)) {
         priceMap.date = firstColumn;
+        log("setting date and time to " + priceMap.date + " " + priceMap.time);
       }
     }
   }
@@ -103,17 +108,28 @@ function toNumber(price, log) {
 }
 
 export function receiptToCsv(receiptPriceMap, debug = false) {
-  var { total, date, ...items } = receiptPriceMap;
+  var log = debug ? console.log : () => {};
+  var { total, date, time, id, ...items } = receiptPriceMap;
   return Object.values(items)
     .reduce((csvLines, item) => {
       var { name } = item;
-      var itemAsCsv = `${date},${name},${calculatePrice(item)}`;
+      var itemAsCsv = `${id},${total.total},${time},${date},${name},${calculatePrice(item, log)}`;
       return [...csvLines, itemAsCsv];
     }, [])
     .join("\n");
 }
 
-function calculatePrice(item) {
-  var { price, discount = 0, taxed = false } = item;
-  return price - discount * (taxed ? 1.075 : 1);
+function calculatePrice(item, log) {
+  var { name, price, discount = 0, taxed = false } = item;
+  const taxModifier = taxed ? 1.075 : 1;
+  const taxModifierDisplay = taxed ? ` * ${taxModifier}` : "";
+  log(
+    `calculating price for item ${name}: (${price} - ${discount})${taxModifierDisplay}`,
+  );
+  return toTwoDecimals((price - discount) * taxModifier);
 }
+
+const toTwoDecimals = (num) => Number(Math.round(num + "e2") + "e-2");
+
+if (typeof window !== "undefined" && window?.document)
+  console.log(receiptToCsv(parseCostcoReceipt(window.document, true), true));

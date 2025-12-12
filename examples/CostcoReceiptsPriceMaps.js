@@ -21,4 +21,16 @@ export const CostcoReceiptsPriceMaps = {
     70000: { name: "KS BACON", price: 16.99 },
     total: { subTotal: 96.96, tax: 1.86, total: 98.82 },
   },
+  WithId: {
+    id: "21129420302422512051854",
+    date: "12/05/2025",
+    time: "18:54",
+    21046: { name: "TOMATO MEDLE", price: 6.99 },
+    720650: { name: "MINI CUKES", price: 6.49 },
+    1117221: { name: "LACROIX HOLI", price: 9.99, taxed: true },
+    2251987: { name: "ORG HUMMUS", price: 5.89 },
+    8169: { name: "MICROGREENS", price: 7.99 },
+    7267: { name: "ORG BROC 2LB", price: 6.99 },
+    total: { subTotal: 44.34, tax: 0.75, total: 45.09 },
+  },
 };

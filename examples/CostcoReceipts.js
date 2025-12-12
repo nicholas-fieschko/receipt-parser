@@ -2,18 +2,17 @@ import { JSDOM } from "jsdom";
 import { CostcoReceiptsHtml } from "./CostcoReceiptsHtml";
 import { CostcoReceiptsPriceMaps } from "./CostcoReceiptsPriceMaps";
 
-const ExampleCostcoReceiptData = {
-  WithDiscount: {
-    html: CostcoReceiptsHtml.WithDiscount,
-    document: toDocument(CostcoReceiptsHtml.WithDiscount),
-    priceMap: CostcoReceiptsPriceMaps.WithDiscount,
-  },
-  WithTaxes: {
-    html: CostcoReceiptsHtml.WithTaxes,
-    document: toDocument(CostcoReceiptsHtml.WithTaxes),
-    priceMap: CostcoReceiptsPriceMaps.WithTaxes,
-  },
-};
+const ExampleCostcoReceiptData = Object.keys(CostcoReceiptsHtml).reduce(
+  (dataMap, receiptLabel) => ({
+    ...dataMap,
+    [receiptLabel]: {
+      html: CostcoReceiptsHtml[receiptLabel],
+      document: toDocument(CostcoReceiptsHtml[receiptLabel]),
+      priceMap: CostcoReceiptsPriceMaps[receiptLabel],
+    },
+  }),
+  {},
+);
 
 function toDocument(htmlString) {
   return new JSDOM(htmlString).window.document;
