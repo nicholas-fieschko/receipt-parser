@@ -33,4 +33,11 @@ export const CostcoReceiptsPriceMaps = {
     7267: { name: "ORG BROC 2LB", price: 6.99 },
     total: { subTotal: 44.34, tax: 0.75, total: 45.09 },
   },
+  Gas: {
+    id: "39411",
+    date: "12/05/25",
+    time: "18:31",
+    gas: { name: "GAS", price: 10.82, perUnit: 2.699, units: 4.009 },
+    total: { total: 10.82 },
+  },
 };

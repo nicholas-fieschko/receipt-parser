@@ -10,6 +10,9 @@ export function parseCostcoReceipt(receipt, debug = false) {
   var isGasReceipt = receipt.querySelector(
     'div[data-bi-tc="ui:Gas Station | Receipt Close"]',
   );
+  if (isGasReceipt) {
+    return parseCostcoGasReceipt(receipt, log);
+  }
 
   var items = receiptTable.querySelectorAll("tr");
   var rowsText = [...items]
@@ -110,6 +113,43 @@ export function parseCostcoReceipt(receipt, debug = false) {
   return priceMap;
 }
 
+const getLineText = (line) => line?.innerText ?? line?.innerHTML;
+
+function parseCostcoGasReceipt(receipt, log) {
+  const lines = [...receipt.querySelectorAll(".MuiTypography-bodyCopy")];
+  const priceMap = { gas: { name: "GAS" }, total: {} };
+  for (let i = 0; i < lines.length; i++) {
+    const line = getLineText(lines[i]);
+    const nextLine = getLineText(lines[i + 1]);
+    log("parsing", line);
+
+    if (line === "Invoice#") {
+      priceMap.id = nextLine;
+    }
+
+    if (line === "Date:") {
+      priceMap.date = nextLine;
+    }
+
+    if (line === "Time:") {
+      priceMap.time = nextLine;
+    }
+
+    if (line === "Price") {
+      priceMap.gas.units = parseFloat(getLineText(lines[i + 2]));
+      priceMap.gas.perUnit = parseFloat(getLineText(lines[i + 3]).slice(1));
+    }
+
+    if (line === "Total Sale") {
+      const totalGasPrice = parseFloat(nextLine.slice(1));
+      priceMap.gas.price = totalGasPrice;
+      priceMap.total.total = totalGasPrice;
+    }
+  }
+
+  return priceMap;
+}
+
 function toNumber(price, log) {
   var numericalPrice = parseFloat(price);
   log("converting price to number:", price, numericalPrice);
@@ -166,8 +206,6 @@ function waitForElm(selector) {
 /**
  * From the Orders and Purchases page, navigates to the Warehouse purchases tab and iterates through available receipts,
  * and outputs a formatted CSV for each to the console.
- * Does not yet support:
- *  - Gas station purchases
  * @returns {Promise<void>}
  */
 async function scrapeReceipts() {
