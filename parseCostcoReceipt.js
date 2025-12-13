@@ -164,8 +164,7 @@ export function receiptToCsv(receiptPriceMap, debug = false) {
   return Object.values(items)
     .reduce((csvLines, item) => {
       var { name } = item;
-      var unitsColumns =
-        name === "GAS" ? `${item.perUnit},${item.units}}` : ",";
+      var unitsColumns = name === "GAS" ? `${item.perUnit},${item.units}` : ",";
       var itemAsCsv = `${id},${total.total},${time},${date},${name},${calculatePrice(item, log)},${unitsColumns}`;
       return [...csvLines, itemAsCsv];
     }, [])
