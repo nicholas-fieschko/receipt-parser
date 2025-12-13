@@ -53,18 +53,6 @@ export function parseCostcoReceipt(receipt, debug = false) {
         var previousItem = items[items.length - 1];
         var discountItemIdOrName = name.slice(1);
         log("found discount for", discountItemIdOrName);
-        if (
-          !priceMap[name.slice(1).trim()] &&
-          !previousItem?.name.includes(discountItemIdOrName) &&
-          !previousItem?.name
-            .toLowerCase()
-            .includes(discountItemIdOrName.replace(/\s/g, "").toLowerCase())
-        ) {
-          throw new Error(
-            "unable to find item to discount for item " + discountItemIdOrName,
-          );
-        }
-
         previousItem.discount = price;
         log("set discount on " + discountItemIdOrName, previousItem);
         continue;
