@@ -1,5 +1,7 @@
+var logger = console.log;
+
 export function parseCostcoReceipt(receipt, debug = false) {
-  var log = debug ? console.log : () => {};
+  var log = debug ? logger : () => {};
 
   var priceMap = {
     id: receipt.querySelector(".barcode div:last-of-type")?.innerHTML,
@@ -52,7 +54,7 @@ export function parseCostcoReceipt(receipt, debug = false) {
         var discountItemIdOrName = name.slice(1);
         log("found discount for", discountItemIdOrName);
         if (
-          !priceMap[name.slice(1)] &&
+          !priceMap[name.slice(1).trim()] &&
           !previousItem?.name.includes(discountItemIdOrName) &&
           !previousItem?.name
             .toLowerCase()
@@ -136,12 +138,12 @@ function parseCostcoGasReceipt(receipt, log) {
     }
 
     if (line === "Price") {
-      priceMap.gas.units = parseFloat(getLineText(lines[i + 2]));
-      priceMap.gas.perUnit = parseFloat(getLineText(lines[i + 3]).slice(1));
+      priceMap.gas.units = toNumber(getLineText(lines[i + 2]), log);
+      priceMap.gas.perUnit = toNumber(getLineText(lines[i + 3]).slice(1), log);
     }
 
     if (line === "Total Sale") {
-      const totalGasPrice = parseFloat(nextLine.slice(1));
+      const totalGasPrice = toNumber(nextLine.slice(1), log);
       priceMap.gas.price = totalGasPrice;
       priceMap.total.total = totalGasPrice;
     }
@@ -157,12 +159,14 @@ function toNumber(price, log) {
 }
 
 export function receiptToCsv(receiptPriceMap, debug = false) {
-  var log = debug ? console.log : () => {};
+  var log = debug ? logger : () => {};
   var { total, date, time, id, ...items } = receiptPriceMap;
   return Object.values(items)
     .reduce((csvLines, item) => {
       var { name } = item;
-      var itemAsCsv = `${id},${total.total},${time},${date},${name},${calculatePrice(item, log)}`;
+      var unitsColumns =
+        name === "GAS" ? `${item.perUnit},${item.units}}` : ",";
+      var itemAsCsv = `${id},${total.total},${time},${date},${name},${calculatePrice(item, log)},${unitsColumns}`;
       return [...csvLines, itemAsCsv];
     }, [])
     .join("\n");
@@ -211,9 +215,10 @@ function waitForElm(selector) {
 async function scrapeReceipts() {
   const isDebugging = window.debug ?? false;
 
+  const receipts = [];
   // If already viewing receipt, just scrape what is on screen
   if (document.querySelector("#printReceipt")) {
-    console.log(
+    receipts.push(
       receiptToCsv(
         parseCostcoReceipt(window.document, isDebugging),
         isDebugging,
@@ -247,7 +252,7 @@ async function scrapeReceipts() {
       // wait for receipt to load
       await waitForElm("#printReceipt");
 
-      console.log(
+      receipts.push(
         receiptToCsv(
           parseCostcoReceipt(window.document, isDebugging),
           isDebugging,
@@ -260,12 +265,14 @@ async function scrapeReceipts() {
       );
       closeButton.click();
 
-      // wait for overlay to disappear?
+      // wait for overlay to disappear
       await new Promise((r) => setTimeout(r, 500));
     }
+
+    logger(receipts.join("\n"));
   }
 }
 
 if (typeof window !== "undefined" && window?.document) {
-  scrapeReceipts().then(() => console.log("done"));
+  scrapeReceipts().then(() => logger("done"));
 }

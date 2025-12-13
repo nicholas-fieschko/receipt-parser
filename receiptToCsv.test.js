@@ -45,8 +45,7 @@ it("produces a csv string with the total, receipt ID, and timestamp on each line
 it("produces a csv string for gas station purchases with the total, price per gallon, and number of gallons", () => {
   const csv = receiptToCsv(CostcoReceiptsPriceMaps.Gas);
 
-  const expectedLine =
-    "39411,10.82,18:31,12/05/2025,MICROGREENS,10.82,2.699,4.009";
+  const expectedLine = "39411,10.82,18:31,12/05/25,GAS,10.82,2.699,4.009";
 
   expect(csv).toContain(expectedLine);
 });
