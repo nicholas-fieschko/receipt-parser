@@ -213,6 +213,7 @@ function waitForElm(selector) {
  */
 async function scrapeReceipts() {
   const isDebugging = window.debug ?? false;
+  const log = isDebugging ? logger : () => {};
 
   const receipts = [];
   // If already viewing receipt, just scrape what is on screen
@@ -230,43 +231,65 @@ async function scrapeReceipts() {
       ?.iterateNext();
     if (warehouseButton) warehouseButton.click();
 
-    // wait for view receipt buttons loaded
-    await waitForElm("button[aria-describedby^='viewRecieptBtn']");
+    // start on page 1
+    let nextPageButton = document.querySelector(
+      'button[aria-label="Go to next page"]',
+    );
+    let currentPage = 0;
+    do {
+      currentPage++;
+      log(`parsing page ${currentPage}`);
 
-    let viewReceiptButtons = [
-      ...document.querySelectorAll(
-        "button[aria-describedby^='viewRecieptBtn']",
-      ),
-    ];
-    for (let i = 0; i < viewReceiptButtons.length; i++) {
-      // document mutation means we need to refetch this list each time, but remember what we've already visited
-      viewReceiptButtons = [
+      // wait for view receipt buttons loaded
+      await waitForElm("button[aria-describedby^='viewRecieptBtn']");
+
+      let viewReceiptButtons = [
         ...document.querySelectorAll(
           "button[aria-describedby^='viewRecieptBtn']",
         ),
       ];
+      for (let i = 0; i < viewReceiptButtons.length; i++) {
+        // document mutation means we need to refetch this list each time, but remember what we've already visited
+        viewReceiptButtons = [
+          ...document.querySelectorAll(
+            "button[aria-describedby^='viewRecieptBtn']",
+          ),
+        ];
 
-      viewReceiptButtons[i].click();
+        viewReceiptButtons[i].click();
 
-      // wait for receipt to load
-      await waitForElm("#printReceipt");
+        // wait for receipt to load
+        await waitForElm("#printReceipt");
 
-      receipts.push(
-        receiptToCsv(
-          parseCostcoReceipt(window.document, isDebugging),
-          isDebugging,
-        ),
+        receipts.push(
+          receiptToCsv(
+            parseCostcoReceipt(window.document, isDebugging),
+            isDebugging,
+          ),
+        );
+
+        // close receipt
+        const closeButton = document.querySelector(
+          'button[aria-label="Close"][tabindex="0"]',
+        );
+        closeButton.click();
+
+        // wait for overlay to disappear
+        await new Promise((r) => setTimeout(r, 500));
+      }
+
+      nextPageButton = document.querySelector(
+        'button[aria-label="Go to next page"]',
       );
-
-      // close receipt
-      const closeButton = document.querySelector(
-        'button[aria-label="Close"][tabindex="0"]',
-      );
-      closeButton.click();
-
-      // wait for overlay to disappear
-      await new Promise((r) => setTimeout(r, 500));
-    }
+      if (nextPageButton) {
+        nextPageButton.click();
+        // wait for next page to load
+        await waitForElm(
+          `button.Mui-selected[aria-label^="page ${currentPage + 1}"]`,
+        );
+      }
+      log("receipts so far", receipts);
+    } while (nextPageButton);
 
     logger(receipts.join("\n"));
   }
