@@ -37,7 +37,13 @@ export const CostcoReceiptsPriceMaps = {
     id: "39411",
     date: "12/05/25",
     time: "18:31",
-    gas: { name: "GAS", price: 10.82, perUnit: 2.699, units: 4.009 },
+    gas: {
+      name: "GAS",
+      price: 10.82,
+      perUnit: 2.699,
+      units: 4.009,
+      unitType: "gallon",
+    },
     total: { total: 10.82 },
   },
 };

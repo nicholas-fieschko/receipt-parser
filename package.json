@@ -4,7 +4,8 @@
   "main": "index.js",
   "scripts": {
     "test": "vitest",
-    "bookmarklet": "node make-bookmarklet.js parseCostcoReceipt.js | pbcopy"
+    "bookmarklet:costco": "node make-bookmarklet.js parseCostcoReceipt.js | pbcopy",
+    "bookmarklet:walmart": "node make-bookmarklet.js parseWalmartReceipt.js | pbcopy"
   },
   "author": "nick",
   "license": "ISC",

@@ -128,6 +128,7 @@ function parseCostcoGasReceipt(receipt, log) {
     if (line === "Price") {
       priceMap.gas.units = toNumber(getLineText(lines[i + 2]), log);
       priceMap.gas.perUnit = toNumber(getLineText(lines[i + 3]).slice(1), log);
+      priceMap.gas.unitType = "gallon";
     }
 
     if (line === "Total Sale") {
