@@ -158,6 +158,42 @@ export function parseWalmartReceipt(window, log = () => {}) {
   return priceMap;
 }
 
+export function receiptToCsv(receiptPriceMap, debug = false) {
+  var log = debug ? logger : () => {};
+  var { id, date, total, items = [] } = receiptPriceMap;
+
+  return items
+    .map((item) => {
+      var csvLine = [
+        id,
+        total.total,
+        date,
+        item.name,
+        item.price,
+        item.perUnit,
+        item.units,
+        item.unitType,
+      ]
+        .map(toCsvValue)
+        .join(",");
+
+      log("constructed csv line", csvLine);
+      return csvLine;
+    })
+    .join("\n");
+}
+
+function toCsvValue(value) {
+  var stringValue = value?.toString() ?? "";
+
+    // Match CSV special characters: double quote, comma, or newline. If present, wrap the field in quotes and escape inner quotes.
+  if (/[",\n]/.test(stringValue)) {
+    return `"${stringValue.replaceAll('"', '""')}"`;
+  }
+
+  return stringValue;
+}
+
 function combineDuplicateItems(items) {
   var seenItems = new Map();
   var consolidatedItems = [];
